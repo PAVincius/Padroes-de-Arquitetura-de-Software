@@ -1,27 +1,26 @@
-class UnityService extends React.Component {
-    constructor(props) {
-    super(props);
-    this.state = {
-    unityService: null
-    };
-    }
-    componentDidMount() {
-        axios.get(`/unityService/${this.props.match.params.id}`)
-            .then(res => this.setState({ unityService: res.data }))
-            .catch(err => console.log(err));
-    }
-    
-    render() {
-        if (!this.state.unityService) {
-            return <div>Loading...</div>;
-        }
-    
-        return (
-            <div>
-                <h2>{this.state.unityService.name}</h2>
-                <p>Array of Unity Service: {this.state.unityService.arrayUnityService}</p>
-                <p>Number of Unity Service: {this.state.unityService.numUnityService}</p>
-            </div>
-    );
-    }
+import axios from 'axios';
+import { useState, useEffect } from 'react';
+
+const UnityService = ({ match }) => {
+const [unityService, setUnityService] = useState(null);
+
+useEffect(() => {
+    axios.get(`/unityService/${match.params.id}`)
+        .then(res => setUnityService(res.data))
+        .catch(err => console.log(err));
+}, [match.params.id]);
+
+if (!unityService) {
+    return <div>Loading...</div>;
 }
+
+return (
+    <div>
+        <h2>{unityService.name}</h2>
+        <p>Array of Unity Service: {unityService.arrayUnityService}</p>
+        <p>Number of Unity Service: {unityService.numUnityService}</p>
+    </div>
+);
+};
+
+export default UnityService;

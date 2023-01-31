@@ -10,14 +10,22 @@ const MedicalRecordSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    arrayPatients: {
-        type: [mongoose.Schema.Types.ObjectId],
+    sex: {
+        type: String,
         ref: 'Paciente'
     },
-    numProfissionais: {
-        type: Number,
+    birthdate: {
+        type: String,
         required: true
-    }
+    },
+    fathername: {
+        type: String,
+        required: true
+    },
+    mothername: {
+        type: String,
+        required: true
+    },
 });
 
 const MedicalRecord = mongoose.model('MedicalRecord', MedicalRecordSchema);
