@@ -25,7 +25,7 @@ mongoose.connect(DB, {
 })
 
 // Importing the Patient model from a separate file
-const Patient = require('./model/Patient')
+const Patient = require('./models/Patient')
 
 // Route for adding a new patient to the database
 app.post('/add-patient', async(req,res) => {
