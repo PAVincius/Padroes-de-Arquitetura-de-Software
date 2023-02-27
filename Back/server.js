@@ -1,53 +1,100 @@
-const express = require('express');
-const next = require('next');
+// Importing required modules and packages
+const express = require('express')
+const cors = require('cors')
+const app = express()
 
-const dev = process.env.NODE_ENV !== 'production';
-const app = next({ dev });
-const handle = app.getRequestHandler();
+// Adding middleware for parsing JSON and enabling CORS
+app.use(express.json())
+app.use(cors())
 
-const PacienteController = require('./controllers/PacienteController').default;
+// Specifying port number and starting the server
+const PORT = 8080
+app.listen(PORT, () => {
+    console.log(`Server is running on PORT ${PORT}...`)
+})
 
-app.prepare().then(() => {
-const server = express();
+// Connecting to MongoDB Atlas cluster
+const mongoose = require('mongoose')
+mongoose.set('strictQuery', false);
+const DB = 'mongodb+srv://clusterpavincius:y2s43cOFmeI12KBB@cluster0.nij4pw1.mongodb.net/test'
+mongoose.connect(DB, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+}).then(() =>{
+    console.log('Database connected..')
+})
 
-server.get('*', (req, res) => {
-    return handle(req, res);
-});
+// Importing the Patient model from a separate file
+const Patient = require('./model/Patient')
 
-// Express routes
-server.get('/paciente/:id', (req, res) => {
-    Paciente.findById(req.params.id)
-        .then(paciente => res.json(paciente))
-        .catch(err => res.status(404).json({ success: false }));
-});
+// Route for adding a new patient to the database
+app.post('/add-patient', async(req,res) => {
+    const patientData = new Patient(req.body)
+    try{
+        await patientData.save()
+        res.status(201).json({
+            status: 'Success',
+            data : {
+                patientData
+            }
+        })
+    }catch(err){
+        res.status(500).json({
+            status: 'Failed',
+            message : err
+        })
+    } 
+})
 
-server.post('/paciente', (req, res) => {
-    const newPaciente = new Paciente({
-        typeAttendance: req.body.typeAttendance,
-        medicalRecord: req.body.medicalRecord,
-        situation: req.body.situation,
-        action: req.body.action
-    });
+// Route for getting all patients from the database
+app.get('/get-patient', async (req,res) => {
+    const patientDatas = await Patient.find({})
+    try{
+        res.status(200).json({
+            status : 'Success',
+            data : {
+                patientDatas
+            }
+        })
+    }catch(err){
+        res.status(500).json({
+            status: 'Failed',
+            message : err
+        })
+    }
+})
 
-    newPaciente.save()
-        .then(paciente => res.json(paciente))
-        .catch(err => res.status(404).json({ success: false }));
-});
+// Route for updating an existing patient in the database
+app.patch('/update-patient/:id', async (req,res) => {
+    const updatedPatient = await Patient.findByIdAndUpdate(req.params.id,req.body,{
+        new : true,
+        runValidators : true
+    })
+    try{
+        res.status(200).json({
+            status : 'Success',
+            data : {
+                updatedPatient
+            }
+        })
+    }catch(err){
+        console.log(err)
+    }
+})
 
-server.put('/paciente/:id', (req, res) => {
-    Paciente.findByIdAndUpdate(req.params.id, req.body)
-        .then(paciente => res.json({ success: true }))
-        .catch(err => res.status(404).json({ success: false }));
-});
-
-server.delete('/paciente/:id', (req, res) => {
-    Paciente.findByIdAndDelete(req.params.id)
-        .then(() => res.json({ success: true }))
-        .catch(err => res.status(404).json({ success: false }));
-});
-
-server.listen(3000, (err) => {
-    if (err) throw err;
-    console.log('Server ready on http://localhost:3000');
-});
-});
+// Route for deleting an existing patient from the database
+app.delete('/delete-patient/:id', async(req,res) => {
+    await Patient.findByIdAndDelete(req.params.id)
+    
+    try{
+      res.status(204).json({
+          status : 'Success',
+          data : {}
+      })
+    }catch(err){
+        res.status(500).json({
+            status: 'Failed',
+            message : err
+        })
+    }
+})
